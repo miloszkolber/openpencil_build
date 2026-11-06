@@ -90,7 +90,7 @@ Run it with `docker run … ghcr.io/miloszkolber/openpencil ai-relay.mjs` (the d
 
 ## Image and distroless notes
 
-The runtime image is `gcr.io/distroless/nodejs22-debian12:nonroot`: Node 22, no shell, no package manager. The server runs as UID/GID 65532 and reads its site from `/app/site`. Mount the TOML file read-only and set `OPENPENCIL_CLOUD_CONFIG`; runtime filesystem writes outside `/tmp` fail.
+The runtime image is `gcr.io/distroless/nodejs22-debian12:nonroot`: Node 22, no shell, no package manager. The server runs as UID/GID 65532 and reads its site from `/app/site`. Mount the TOML file read-only and set `OPENPENCIL_CLOUD_CONFIG`; the application directory is root-owned and read-only to the runtime, so use `/tmp` for temporary files.
 
 ## First administrator and operator commands
 

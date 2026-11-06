@@ -49,11 +49,13 @@ docker run --rm --user "$(id -u):$(id -g)" --network openpencil-stack_default \
   oven/bun:1.4.4 sh -lc 'bun install --frozen-lockfile && bun --filter @open-pencil/cloud admin approve <email> && bun --filter @open-pencil/cloud admin grant <email>'
 ```
 
-After the first account is granted, set `authentication.enrollment.mode = "closed"` (or `"approval"`) in `openpencil.toml` and restart the server:
+After the first account is granted, set `authentication.enrollment.mode = "closed"` (or `"approval"`) in `openpencil.toml` and restart the stack:
 
 ```sh
-docker compose --env-file .env up -d --wait --force-recreate openpencil
+docker compose --env-file .env up -d --wait --force-recreate
 ```
+
+Recreate the whole stack rather than only `openpencil`: SeaweedFS shares the server's network namespace, so recreating the server alone would leave it on a stale namespace.
 
 ## Configuration
 

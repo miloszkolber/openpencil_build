@@ -17,6 +17,7 @@ This repository uses [OpenSpec](https://github.com/Fission-AI/OpenSpec) to keep 
 | [OpenPencil image](specs/cloud-image/spec.md) | [cloud/Dockerfile](../cloud/Dockerfile), [scripts/fetch_source.py](../scripts/fetch_source.py) | Cloud unit tests, smoke stack and image inspection |
 | [Release pipeline](specs/release-pipeline/spec.md) | [.github/workflows/cloud.yml](../.github/workflows/cloud.yml), [scripts/resolve_release.py](../scripts/resolve_release.py), [scripts/publish.py](../scripts/publish.py) | Workflow runs, release policy tests and published manifests |
 | [Deployment stack](specs/deployment/spec.md) | [deploy/](../deploy/), [cloud/configuration.md](../cloud/configuration.md) | Compose validation, local stack smoke run and configuration review |
+| [Cloud MCP bridge](specs/cloud-mcp/spec.md) | [mcp/](../mcp/README.md), [mcp/src/live.ts](../mcp/src/live.ts) | Image health, MCP initialization/tool listing and live room edit checks |
 
 Specs state the contract, not a claim that every scenario has been executed. A build check does not establish upstream runtime compatibility or deployment acceptance.
 

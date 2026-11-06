@@ -6,6 +6,7 @@ OpenPencil image built from upstream mainline release source and published to GH
 | --- | --- | --- |
 | OpenPencil | [`cloud/Dockerfile`](cloud/Dockerfile), upstream release archive | `ghcr.io/miloszkolber/openpencil` |
 | Local stack | [`deploy/compose.yaml`](deploy/compose.yaml) | PostgreSQL, SeaweedFS, bucket initializer, Mailpit |
+| MCP bridge | [`mcp/`](mcp/README.md) | Live Cloud collaboration MCP for remote agents |
 
 ## Build and release
 
@@ -20,6 +21,10 @@ A candidate must pass the Cloud unit tests and a real smoke stack with PostgreSQ
 Publication writes the exact release version (`0.17.0-beta.2`, for example) and moves `latest` to the newest mainline release, including a beta. A manual build of an older release publishes only its version tag and never moves `latest` backwards. The runtime is a distroless Node 22 image with no shell or package manager.
 
 Pull requests build and smoke-test without logging in or publishing. Publication is not deployment.
+
+## MCP bridge
+
+[`mcp/`](mcp/README.md) is a long-running MCP service that joins a Cloud document's collaboration room as an editing peer. It exposes the OpenPencil tool registry to remote MCP clients such as opencode, and edits appear live in the browser. It authenticates through Cloud device authorization and saves revisions after a quiet period or on request.
 
 ## Self-hosting
 

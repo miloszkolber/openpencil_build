@@ -6,6 +6,7 @@ export function checkDocumentation(root) {
   const failures = [];
   const fail = (file, message) => failures.push(`${relative(root, file)}: ${message}`);
   const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    if (['node_modules', '.git', '.build', 'dist', 'vendor'].includes(entry.name)) return [];
     const file = resolve(dir, entry.name);
     return entry.isDirectory() ? walk(file) : [file];
   });
@@ -23,7 +24,7 @@ export function checkDocumentation(root) {
     const file = resolve(root, name);
     if (existsSync(file)) files.push(file);
   }
-  for (const directory of ['cloud', 'deploy']) {
+  for (const directory of ['cloud', 'deploy', 'mcp']) {
     const path = resolve(root, directory);
     if (existsSync(path)) files.push(...walk(path).filter(file => file.endsWith('.md')));
   }

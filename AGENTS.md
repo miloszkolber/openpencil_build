@@ -7,6 +7,8 @@
 - Keep the dependency refresh explicit: `bun update` stays within the release's declared ranges, base images are resolved to linux/amd64 digests, and Dependabot covers base tags and Actions. A dependency change that breaks the unit tests or smoke stack must fail the build.
 - Keep the runtime distroless and non-root: no shell, package manager or extra OS tools. `latest` is the newest mainline build; there is no separate prerelease channel.
 - Keep the deployment stack and configuration reference current in `deploy/` and `cloud/configuration.md` when image settings change.
+- Keep the MCP bridge in `mcp/` a live-room peer, not a desktop-app shim: it must join the Cloud relay, seed an empty room from the stored revision, and keep the headless graph and Yjs room in step.
+- Keep the Cloud token and MCP token separate; never log either, and keep the bridge runnable with a read-only root and a writable data volume.
 - Publish only a checked candidate from `main`. Pull requests build without registry credentials. Publication never authorizes deployment or a service restart.
 - Keep secrets and registry credentials out of source, build arguments, labels, logs and artifacts.
 - Update specs and READMEs with behavior changes, not afterward. Use a scoped change under `openspec/changes/` for nontrivial behavior; small corrections may use a reviewed diff.

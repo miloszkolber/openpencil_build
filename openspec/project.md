@@ -10,6 +10,7 @@
 | Build inputs | `scripts/resolve_release.py`, `scripts/bases.py`, `scripts/fingerprint.py` | Resolved JSON, fingerprint and OCI labels |
 | Release pipeline | `.github/workflows/cloud.yml`, `scripts/publish.py` | Version tags and `latest` |
 | Self-hosting stack | `deploy/`, `cloud/configuration.md` | PostgreSQL, SeaweedFS, bucket initializer and Mailpit |
+| Cloud MCP bridge | `mcp/` | Live collaboration MCP service for remote agents |
 
 Upstream OpenPencil owns the application, its release cadence and its runtime behavior. This repository owns the build recipe, resolved inputs, dependency refresh, checks, publication and the deployment example.
 
@@ -20,6 +21,7 @@ Upstream OpenPencil owns the application, its release cadence and its runtime be
 - Run the Cloud unit tests and a real server smoke stack before publication.
 - Keep the runtime distroless and non-root, with `latest` tracking the newest mainline build.
 - Provide a preconfigured local stack and a configuration reference without claiming production hardening.
+- Expose the editor tool surface to remote MCP clients through a live Cloud collaboration room until an official Cloud MCP exists.
 - Keep publication separate from host deployment and keep the repository host-neutral.
 - Make changes reviewable through requirements, scenarios and evidence.
 

@@ -13,7 +13,7 @@ The image runs the OpenPencil Cloud server with the editor and portal pages it s
 | Build fingerprint | [`scripts/fingerprint.py`](../scripts/fingerprint.py) |
 | Publication | [`scripts/publish.py`](../scripts/publish.py) |
 
-The workflow selects the newest non-draft release by semver across stable and prerelease tags. `bun update` refreshes direct and transitive dependencies within the ranges declared by the release. The resulting image is therefore newer than the release's committed lockfile and is not bit-reproducible.
+The workflow selects the newest non-draft release by semver across stable and prerelease tags. `bun update` refreshes direct and transitive dependencies within the ranges declared by the release. The resulting image is therefore newer than the release's committed lockfile and is not bit-reproducible. Dependabot updates base tags within their current major versions; a major runtime or toolchain change is a reviewed manual change.
 
 ## Contents
 

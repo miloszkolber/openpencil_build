@@ -52,7 +52,8 @@ The build SHALL refresh runtime dependencies within the release's declared range
 #### Scenario: Dependency monitoring
 
 - **WHEN** Dependabot evaluates the repository
-- **THEN** it proposes weekly GitHub Actions and Docker base-tag updates
+- **THEN** it proposes weekly GitHub Actions and Docker base-tag updates within the supported major versions
+- **AND** a major runtime or toolchain change remains a reviewed manual change
 
 ### Requirement: Pre-publication verification
 

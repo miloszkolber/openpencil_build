@@ -12,7 +12,7 @@ The image workflow runs every Monday at 04:47 UTC, on relevant pushes to `main`,
 
 Each run resolves the newest non-draft OpenPencil release by semver across stable and prerelease tags, then downloads that release commit's source archive. A beta that is newer than the latest stable is selected. Manual dispatch can pin any published tag, including a beta.
 
-The build refreshes dependencies instead of trusting the release lockfile alone. It runs `bun update`, which keeps every dependency within the ranges declared by the release, then runs the Cloud unit tests before building the packages and server. Base images are resolved to linux/amd64 digests on every run. Dependabot proposes weekly updates for the Docker base tags and GitHub Actions.
+The build refreshes dependencies instead of trusting the release lockfile alone. It runs `bun update`, which keeps every dependency within the ranges declared by the release, then runs the Cloud unit tests before building the packages and server. Base images are resolved to linux/amd64 digests on every run. Dependabot proposes weekly updates for GitHub Actions and Docker base tags within their current major versions; major runtime changes are manual.
 
 A candidate must pass the Cloud unit tests and a real smoke stack with PostgreSQL, SeaweedFS and the built server before publication. The smoke stack checks `/health`, `/ready` and the `/welcome` page.
 

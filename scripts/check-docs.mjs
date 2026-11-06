@@ -23,6 +23,10 @@ export function checkDocumentation(root) {
     const file = resolve(root, name);
     if (existsSync(file)) files.push(file);
   }
+  for (const directory of ['cloud', 'deploy']) {
+    const path = resolve(root, directory);
+    if (existsSync(path)) files.push(...walk(path).filter(file => file.endsWith('.md')));
+  }
 
   const heading = value => value.toLowerCase().replace(/[^\p{L}\p{N}_\- ]/gu, '').replace(/ /g, '-');
   for (const file of files) {

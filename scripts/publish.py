@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish the checked OpenPencil Cloud image and its channel tags."""
+"""Check or publish the OpenPencil image and its channel tags."""
 import argparse
 import base64
 import json
@@ -146,12 +146,19 @@ def image_labels(package, tag, actor, token):
     return labels
 
 
+def release_is_current(exact_digest, latest_digest, newest_release):
+    """Whether the published tags already represent this release."""
+    if exact_digest is None:
+        return False
+    if not newest_release:
+        return True
+    return latest_digest is not None and latest_digest == exact_digest
+
+
 def channel_tags(release):
     tags = [release["version"]]
-    if release["newest_stable"]:
+    if release["newest_release"]:
         tags.append("latest")
-    if release["prerelease"] and release["newest_release"]:
-        tags.append("next")
     return tags
 
 
@@ -165,18 +172,44 @@ def push(local, reference):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--image", default="ghcr.io/miloszkolber/openpencil-cloud")
-    parser.add_argument("--local", default="openpencil-cloud:local")
+    parser.add_argument("--image", default="ghcr.io/miloszkolber/openpencil")
+    parser.add_argument("--local", default="openpencil:local")
     parser.add_argument("--release", default=".build/release.json")
     parser.add_argument("--fingerprint", default=".build/fingerprint.txt")
     parser.add_argument("--output", default=".build/published.json")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Report whether the release tags are already published and exit",
+    )
     args = parser.parse_args()
 
     release = json.loads(Path(args.release).read_text(encoding="utf-8"))
-    fingerprint = Path(args.fingerprint).read_text(encoding="utf-8").strip()
     package = package_name(args.image)
     token = os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN")
     actor = os.getenv("GITHUB_ACTOR", "local")
+
+    if args.check:
+        exact = registry_manifest(package, release["version"], actor, token)
+        latest = (
+            registry_manifest(package, "latest", actor, token)
+            if release["newest_release"]
+            else None
+        )
+        current = release_is_current(
+            exact[0] if exact else None,
+            latest[0] if latest else None,
+            release["newest_release"],
+        )
+        value = "true" if current else "false"
+        print(f"published={value}")
+        destination = os.getenv("GITHUB_OUTPUT")
+        if destination:
+            with open(destination, "a", encoding="utf-8") as output:
+                output.write(f"published={value}\n")
+        return
+
+    fingerprint = Path(args.fingerprint).read_text(encoding="utf-8").strip()
 
     tags = channel_tags(release)
     if "latest" in tags and token:

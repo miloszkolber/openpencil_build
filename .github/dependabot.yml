@@ -17,6 +17,8 @@ updates:
     ignore:
       - dependency-name: node
         update-types: ['version-update:semver-major']
+      - dependency-name: gcr.io/distroless/nodejs22-debian12
+        update-types: ['version-update:semver-major']
       - dependency-name: oven/bun
         update-types: ['version-update:semver-major']
       - dependency-name: mcr.microsoft.com/playwright

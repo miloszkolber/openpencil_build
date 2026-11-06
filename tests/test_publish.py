@@ -8,38 +8,47 @@ publish = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(publish)
 
 
-def release(version="0.17.0-beta.2", prerelease=True, newest_release=True, newest_stable=False):
+def release(version="0.17.0-beta.2", newest_release=True):
     return {
         "version": version,
         "tag": f"v{version}",
-        "prerelease": prerelease,
         "newest_release": newest_release,
-        "newest_stable": newest_stable,
     }
 
 
 class ChannelTagTests(unittest.TestCase):
-    def test_newest_prerelease_publishes_version_and_next(self):
+    def test_newest_prerelease_publishes_version_and_latest(self):
         self.assertEqual(
             publish.channel_tags(release()),
-            ["0.17.0-beta.2", "next"],
+            ["0.17.0-beta.2", "latest"],
         )
 
     def test_newest_stable_publishes_version_and_latest(self):
         self.assertEqual(
-            publish.channel_tags(
-                release("0.17.0", prerelease=False, newest_stable=True)
-            ),
+            publish.channel_tags(release("0.17.0")),
             ["0.17.0", "latest"],
         )
 
     def test_manual_older_release_publishes_only_its_version(self):
         self.assertEqual(
-            publish.channel_tags(
-                release("0.16.0", prerelease=False, newest_release=False)
-            ),
+            publish.channel_tags(release("0.16.0", newest_release=False)),
             ["0.16.0"],
         )
+
+
+class CurrentReleaseTests(unittest.TestCase):
+    digest = "sha256:" + "a" * 64
+    other = "sha256:" + "b" * 64
+
+    def test_newest_release_is_current_only_when_latest_matches(self):
+        self.assertTrue(publish.release_is_current(self.digest, self.digest, True))
+        self.assertFalse(publish.release_is_current(self.digest, self.other, True))
+        self.assertFalse(publish.release_is_current(self.digest, None, True))
+        self.assertFalse(publish.release_is_current(None, self.digest, True))
+
+    def test_older_release_is_current_when_its_version_exists(self):
+        self.assertTrue(publish.release_is_current(self.digest, self.other, False))
+        self.assertFalse(publish.release_is_current(None, self.digest, False))
 
 
 class PushDigestTests(unittest.TestCase):
@@ -53,11 +62,11 @@ class PushDigestTests(unittest.TestCase):
 class PackageTests(unittest.TestCase):
     def test_package_name_requires_ghcr(self):
         self.assertEqual(
-            publish.package_name("ghcr.io/miloszkolber/openpencil-cloud"),
-            "miloszkolber/openpencil-cloud",
+            publish.package_name("ghcr.io/miloszkolber/openpencil"),
+            "miloszkolber/openpencil",
         )
         with self.assertRaises(ValueError):
-            publish.package_name("docker.io/miloszkolber/openpencil-cloud")
+            publish.package_name("docker.io/miloszkolber/openpencil")
 
 
 if __name__ == "__main__":

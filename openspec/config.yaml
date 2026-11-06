@@ -1,11 +1,13 @@
 schema: spec-driven
 
 context: |
-  openpencil_build publishes the OpenPencil Cloud container image built from
+  openpencil_build publishes the OpenPencil container image built from
   upstream mainline release source. The newest non-draft release, including
-  prereleases, is selected; project dependencies and base images are refreshed
-  on the weekly build. See openspec/project.md and cloud/README.md. Upstream
-  OpenPencil behavior and host deployment are external owners.
+  prereleases, is checked daily; a build happens only when it is not already
+  published. Project dependencies and base images are refreshed on each build.
+  The deploy/ directory provides a preconfigured self-hosting stack. See
+  openspec/project.md and cloud/README.md. Upstream OpenPencil behavior and
+  host deployment are external owners.
 
 rules:
   proposal:

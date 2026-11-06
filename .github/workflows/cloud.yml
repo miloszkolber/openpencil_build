@@ -1,4 +1,4 @@
-name: Cloud image
+name: OpenPencil image
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - 'cloud/Dockerfile'
       - 'cloud/smoke.compose.yml'
       - 'cloud/smoke.sh'
-      - 'cloud/openpencil-cloud.toml'
+      - 'cloud/openpencil.toml'
       - 'cloud/s3.json'
       - 'scripts/resolve_release.py'
       - 'scripts/fetch_source.py'
@@ -24,7 +24,7 @@ on:
       - 'cloud/Dockerfile'
       - 'cloud/smoke.compose.yml'
       - 'cloud/smoke.sh'
-      - 'cloud/openpencil-cloud.toml'
+      - 'cloud/openpencil.toml'
       - 'cloud/s3.json'
       - 'scripts/resolve_release.py'
       - 'scripts/fetch_source.py'
@@ -37,7 +37,7 @@ on:
       - 'tests/test_publish.py'
       - '.github/workflows/cloud.yml'
   schedule:
-    - cron: '47 4 * * 1'
+    - cron: '17 4 * * *'
   workflow_dispatch:
     inputs:
       tag:
@@ -53,7 +53,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE: ghcr.io/miloszkolber/openpencil-cloud
+  IMAGE: ghcr.io/miloszkolber/openpencil
 
 jobs:
   image:
@@ -80,13 +80,30 @@ jobs:
             --tag "$RELEASE_TAG" \
             --output .build/release.json
 
+      - name: Check whether this release is already published
+        id: published
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/publish.py --check \
+            --image "$IMAGE" \
+            --release .build/release.json
+
+      - name: Report an unchanged release
+        if: github.event_name == 'schedule' && steps.published.outputs.published == 'true'
+        run: |
+          echo "OpenPencil ${{ steps.release.outputs.version }} is already published; skipping the rebuild."
+
       - name: Fetch release source
+        if: github.event_name != 'schedule' || steps.published.outputs.published != 'true'
         run: |
           python3 scripts/fetch_source.py \
             --release .build/release.json \
             --destination .build/source
 
       - name: Resolve and pin base images
+        if: github.event_name != 'schedule' || steps.published.outputs.published != 'true'
         run: |
           python3 scripts/bases.py \
             --dockerfile cloud/Dockerfile \
@@ -95,6 +112,7 @@ jobs:
 
       - name: Fingerprint build inputs
         id: fingerprint
+        if: github.event_name != 'schedule' || steps.published.outputs.published != 'true'
         run: |
           value=$(python3 scripts/fingerprint.py \
             --release .build/release.json \
@@ -104,6 +122,7 @@ jobs:
           echo "value=$value" >> "$GITHUB_OUTPUT"
 
       - name: Build candidate
+        if: github.event_name != 'schedule' || steps.published.outputs.published != 'true'
         env:
           VERSION: ${{ steps.release.outputs.version }}
           TAG: ${{ steps.release.outputs.tag }}
@@ -114,7 +133,7 @@ jobs:
           docker build --pull \
             --file .build/Dockerfile \
             --tag "$IMAGE:local" \
-            --label "org.opencontainers.image.title=OpenPencil Cloud" \
+            --label "org.opencontainers.image.title=OpenPencil" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --label "org.opencontainers.image.version=$VERSION" \
@@ -127,10 +146,11 @@ jobs:
             .build/source
 
       - name: Smoke-test candidate
+        if: github.event_name != 'schedule' || steps.published.outputs.published != 'true'
         run: bash cloud/smoke.sh "$IMAGE:local"
 
       - name: Log in to GHCR
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (github.event_name != 'schedule' || steps.published.outputs.published != 'true')
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -139,7 +159,7 @@ jobs:
 
       - name: Publish checked image
         id: publish
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (github.event_name != 'schedule' || steps.published.outputs.published != 'true')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -151,7 +171,7 @@ jobs:
             --output .build/published.json
 
       - name: Verify anonymous pull
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && (github.event_name != 'schedule' || steps.published.outputs.published != 'true')
         env:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
@@ -162,7 +182,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: openpencil-cloud-evidence
+          name: openpencil-evidence
           path: |
             .build/release.json
             .build/bases.json

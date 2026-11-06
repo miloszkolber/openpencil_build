@@ -1,24 +1,29 @@
 # openpencil_build
 
-Weekly OpenPencil Cloud image built from upstream mainline release source and published to GHCR as `latest`, `next` and version tags.
+OpenPencil image built from upstream mainline release source and published to GHCR as `latest` plus version tags.
 
 | Deliverable | Source | Image |
 | --- | --- | --- |
-| OpenPencil Cloud | [`cloud/Dockerfile`](cloud/Dockerfile), upstream release archive | `ghcr.io/miloszkolber/openpencil-cloud` |
+| OpenPencil | [`cloud/Dockerfile`](cloud/Dockerfile), upstream release archive | `ghcr.io/miloszkolber/openpencil` |
+| Local stack | [`deploy/compose.yaml`](deploy/compose.yaml) | PostgreSQL, SeaweedFS, bucket initializer, Mailpit |
 
 ## Build and release
 
-The image workflow runs every Monday at 04:47 UTC, on relevant pushes to `main`, on pull requests and on manual dispatch.
+The image workflow checks for a new upstream release every day at 04:17 UTC. It also builds on relevant pushes to `main`, on pull requests and on manual dispatch.
 
-Each run resolves the newest non-draft OpenPencil release by semver across stable and prerelease tags, then downloads that release commit's source archive. A beta that is newer than the latest stable is selected. Manual dispatch can pin any published tag, including a beta. A release published between Monday runs is built on the next run or immediately by manual dispatch.
+Each check resolves the newest non-draft OpenPencil release by semver across stable and prerelease tags, then downloads that release commit's source archive. A beta newer than the latest stable is eligible. A scheduled run rebuilds only when that release's version or `latest` tag is missing; an unchanged release is reported and skipped. Manual dispatch can pin any published tag, including a beta, and always rebuilds on request.
 
-The build refreshes dependencies instead of trusting the release lockfile alone. It runs `bun update`, which keeps every dependency within the ranges declared by the release, then runs the Cloud unit tests before building the packages and server. Base images are resolved to linux/amd64 digests on every run. Dependabot proposes weekly updates for GitHub Actions and Docker base tags within their current major versions; major runtime changes are manual.
+The build refreshes dependencies instead of trusting the release lockfile alone. It runs `bun update`, which keeps every dependency within the ranges declared by the release, then runs the Cloud unit tests before building the packages and server. Base images are resolved to linux/amd64 digests on every build. Dependabot proposes weekly updates for GitHub Actions and Docker base tags within their current major versions; major runtime changes are manual.
 
 A candidate must pass the Cloud unit tests and a real smoke stack with PostgreSQL, SeaweedFS and the built server before publication. The smoke stack checks `/health`, `/ready` and the `/welcome` page.
 
-Publication writes the exact release version (`0.17.0-beta.2`, for example), `next` for the newest prerelease and `latest` only for the newest stable release. Version tags are rebuilt by later weekly runs when their dependencies or bases change; use the registry digest or the `io.openpencil-build.inputs` label for exact rollback. A manual build of an older release publishes only its version tag and never moves `latest` backwards.
+Publication writes the exact release version (`0.17.0-beta.2`, for example) and moves `latest` to the newest mainline release, including a beta. A manual build of an older release publishes only its version tag and never moves `latest` backwards. The runtime is a distroless Node 22 image with no shell or package manager.
 
 Pull requests build and smoke-test without logging in or publishing. Publication is not deployment.
+
+## Self-hosting
+
+[`deploy/`](deploy/README.md) starts the image with preconfigured PostgreSQL, SeaweedFS, bucket initialization and Mailpit. [`cloud/configuration.md`](cloud/configuration.md) documents the startup variables, secrets and TOML sections.
 
 ## Local build
 
@@ -28,8 +33,8 @@ python3 scripts/fetch_source.py --release .build/release.json --destination .bui
 python3 scripts/bases.py --dockerfile cloud/Dockerfile \
   --output .build/bases.json --rewrite .build/Dockerfile
 docker build --pull --file .build/Dockerfile \
-  --tag ghcr.io/miloszkolber/openpencil-cloud:local .build/source
-bash cloud/smoke.sh ghcr.io/miloszkolber/openpencil-cloud:local
+  --tag ghcr.io/miloszkolber/openpencil:local .build/source
+bash cloud/smoke.sh ghcr.io/miloszkolber/openpencil:local
 ```
 
 `.build/` is generated and ignored. Never commit a release archive or a refreshed lockfile. The upstream project owns OpenPencil behavior; this repository owns only the build recipe, resolved inputs, checks and publication.

@@ -1,8 +1,8 @@
-# Cloud image
+# OpenPencil image
 
 ## Purpose
 
-Build the OpenPencil Cloud image from the newest upstream mainline release source with refreshed dependencies and verified runtime behavior.
+Build the OpenPencil image from the newest upstream mainline release source with refreshed dependencies and verified runtime behavior.
 
 Source: [Dockerfile](../../../cloud/Dockerfile), [release resolver](../../../scripts/resolve_release.py), [source fetcher](../../../scripts/fetch_source.py), [base resolver](../../../scripts/bases.py). Checks: Cloud unit tests and the [smoke stack](../../../cloud/smoke.sh).
 
@@ -23,7 +23,7 @@ The image SHALL be built from the source archive of the newest non-draft OpenPen
 - **WHEN** a manual run supplies a release tag
 - **THEN** the resolver accepts only an existing non-draft OpenPencil release
 - **AND** an unknown or malformed tag fails the run
-- **AND** an older release can be built without moving channel tags for a newer release
+- **AND** an older release can be built without moving `latest`
 
 #### Scenario: Source identity
 
@@ -72,12 +72,12 @@ A candidate image SHALL pass unit tests and a real service smoke test before pub
 
 Publication SHALL identify the image with its upstream release and build inputs.
 
-#### Scenario: Version and channel tags
+#### Scenario: Version and latest tags
 
 - **WHEN** a checked candidate is published
 - **THEN** the exact release version is written as a tag
-- **AND** `latest` is written only for the newest stable release
-- **AND** `next` is written only for the newest prerelease
+- **AND** `latest` is written when the release is the newest mainline release, including a prerelease
+- **AND** there is no separate prerelease channel
 - **AND** a manual build of an older release never moves `latest` backwards
 
 #### Scenario: Provenance labels
@@ -90,12 +90,13 @@ Publication SHALL identify the image with its upstream release and build inputs.
 
 ### Requirement: Runtime image boundary
 
-The image SHALL contain only the built Cloud server, its site assets and upstream license notices on a non-root Node runtime.
+The image SHALL contain only the built Cloud server, its site assets and upstream license notices on a distroless, non-root Node runtime.
 
 #### Scenario: Runtime contents
 
 - **WHEN** the runtime image is inspected
-- **THEN** it runs as the unprivileged `node` user
-- **AND** it serves on port 8787
+- **THEN** it uses a distroless Node 22 base and runs as UID/GID 65532
+- **AND** it serves on port 8787 with the site at `/app/site`
 - **AND** it contains the standalone server, the built site, the Cloud LICENSE and the Cloud NOTICE
-- **AND** it contains no package manager
+- **AND** it contains no shell, package manager or extra OS tools
+- **AND** `/tmp` remains writable for runtime temporary files

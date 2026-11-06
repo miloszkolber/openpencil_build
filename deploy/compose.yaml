@@ -1,0 +1,94 @@
+name: openpencil-stack
+
+services:
+  openpencil:
+    image: ${OPENPENCIL_IMAGE:-ghcr.io/miloszkolber/openpencil:latest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    environment:
+      OPENPENCIL_CLOUD_CONFIG: /etc/openpencil/openpencil.toml
+      DATABASE_URL: postgresql://openpencil:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/openpencil
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-openpencil}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Set S3_SECRET_ACCESS_KEY}
+      TZ: ${TZ:-UTC}
+    ports:
+      - '127.0.0.1:8787:8787'
+      - '127.0.0.1:8333:8333'
+    volumes:
+      - ./openpencil.toml:/etc/openpencil/openpencil.toml:ro
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.41
+    restart: unless-stopped
+    network_mode: service:openpencil
+    depends_on:
+      - openpencil
+    command:
+      - server
+      - -dir=/data
+      - -s3
+      - -s3.port=8333
+      - -s3.config=/etc/seaweedfs/s3.json
+    volumes:
+      - seaweedfs:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '8333']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  bucket:
+    image: amazon/aws-cli:2.27.49
+    network_mode: service:openpencil
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-openpencil}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Set S3_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - >-
+        aws --endpoint-url http://127.0.0.1:8333 s3api head-bucket --bucket openpencil
+        || aws --endpoint-url http://127.0.0.1:8333 s3api create-bucket --bucket openpencil
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: openpencil
+      POSTGRES_USER: openpencil
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U openpencil -d openpencil']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:v1.31.0
+    restart: unless-stopped
+    environment:
+      MP_DISABLE_VERSION_CHECK: 'true'
+      MP_SMTP_DISABLE_RDNS: 'true'
+    ports:
+      - '127.0.0.1:8025:8025'
+    healthcheck:
+      test: ['CMD', 'busybox', 'wget', '-qO-', 'http://127.0.0.1:8025/']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres:
+  seaweedfs:

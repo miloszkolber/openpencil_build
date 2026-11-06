@@ -49,7 +49,7 @@ jobs:
           printf '%s\n' \
             '{"serverURL":"http://127.0.0.1:9","accessToken":"smoke","savedAt":"2026-01-01T00:00:00.000Z"}' \
             > "$RUNNER_TEMP/mcp-data/cloud.json"
-          chmod 600 "$RUNNER_TEMP/mcp-data/cloud.json"
+          chmod 644 "$RUNNER_TEMP/mcp-data/cloud.json"
           docker run -d --name openpencil-mcp-smoke \
             --read-only --tmpfs /tmp:size=64m,mode=1777 \
             --cap-drop ALL --security-opt no-new-privileges:true \

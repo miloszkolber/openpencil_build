@@ -1,0 +1,163 @@
+name: Cloud image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloud/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/cloud.yml'
+  pull_request:
+    paths:
+      - 'cloud/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/cloud.yml'
+  schedule:
+    - cron: '47 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (vX.Y.Z or vX.Y.Z-beta.N); empty selects the newest mainline release'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloud-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/miloszkolber/openpencil-cloud
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test release and publication policy
+        run: python3 -m unittest discover -s tests
+
+      - name: Resolve newest mainline release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || '' }}
+        run: |
+          python3 scripts/resolve_release.py \
+            --tag "$RELEASE_TAG" \
+            --output .build/release.json
+
+      - name: Fetch release source
+        run: |
+          python3 scripts/fetch_source.py \
+            --release .build/release.json \
+            --destination .build/source
+
+      - name: Resolve and pin base images
+        run: |
+          python3 scripts/bases.py \
+            --dockerfile cloud/Dockerfile \
+            --output .build/bases.json \
+            --rewrite .build/Dockerfile
+
+      - name: Fingerprint build inputs
+        id: fingerprint
+        run: |
+          value=$(python3 scripts/fingerprint.py \
+            --release .build/release.json \
+            --bases .build/bases.json \
+            --dockerfile .build/Dockerfile \
+            --smoke cloud/smoke.compose.yml)
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+
+      - name: Build candidate
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ steps.release.outputs.tag }}
+          COMMIT: ${{ steps.release.outputs.commit }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+          FINGERPRINT: ${{ steps.fingerprint.outputs.value }}
+        run: |
+          docker build --pull \
+            --file .build/Dockerfile \
+            --tag "$IMAGE:local" \
+            --label "org.opencontainers.image.title=OpenPencil Cloud" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "org.opencontainers.image.version=$VERSION" \
+            --label "org.opencontainers.image.url=https://github.com/open-pencil/open-pencil/releases/tag/$TAG" \
+            --label "org.opencontainers.image.licenses=Apache-2.0 AND MIT" \
+            --label "io.openpencil-build.upstream.tag=$TAG" \
+            --label "io.openpencil-build.upstream.commit=$COMMIT" \
+            --label "io.openpencil-build.release-id=$RELEASE_ID" \
+            --label "io.openpencil-build.inputs=$FINGERPRINT" \
+            .build/source
+
+      - name: Smoke-test candidate
+        run: bash cloud/smoke.sh "$IMAGE:local"
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | \
+            docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Publish checked image
+        id: publish
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/publish.py \
+            --image "$IMAGE" \
+            --local "$IMAGE:local" \
+            --release .build/release.json \
+            --fingerprint .build/fingerprint.txt \
+            --output .build/published.json
+
+      - name: Request public package visibility
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method PATCH \
+            "/user/packages/container/openpencil-cloud" \
+            -f visibility=public \
+            || echo "::warning::Set the GHCR package visibility to public in GitHub package settings"
+
+      - name: Verify anonymous pull
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          docker logout ghcr.io
+          docker pull "$IMAGE:$VERSION" \
+            || echo "::warning::Anonymous pull failed; the package is not public yet"
+
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: openpencil-cloud-evidence
+          path: |
+            .build/release.json
+            .build/bases.json
+            .build/fingerprint.txt
+            .build/published.json
+          if-no-files-found: warn
+          retention-days: 30

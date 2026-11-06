@@ -1,0 +1,9 @@
+OpenPencil Cloud is built from upstream OpenPencil source.
+
+OpenPencil is Copyright 2026 Danila Poyarkov and OpenPencil contributors and is
+distributed under the MIT License. The OpenPencil Cloud package is licensed
+under the Apache License, Version 2.0, except its contract and client modules,
+which are under the MIT License. The built image retains the upstream Cloud
+LICENSE and NOTICE files.
+
+Source: https://github.com/open-pencil/open-pencil

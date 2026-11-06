@@ -1,0 +1,48 @@
+name: Documentation contracts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'openspec/**'
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'cloud/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'openspec/**'
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'cloud/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker://rhysd/actionlint:1.7.12
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.4'
+
+      - run: bun scripts/check-docs.mjs
+      - run: bun test scripts/check-docs.test.mjs
+      - run: python3 -m unittest discover -s tests
+      - run: bun x --bun @fission-ai/openspec@1.16.0 validate --all --strict
+        env:
+          OPENSPEC_TELEMETRY: '0'

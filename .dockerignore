@@ -1,0 +1,10 @@
+.git
+.build
+.smoke
+tests
+openspec
+scripts
+README.md
+AGENTS.md
+NOTICE
+.github

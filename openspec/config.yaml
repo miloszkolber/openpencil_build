@@ -1,0 +1,25 @@
+schema: spec-driven
+
+context: |
+  openpencil_build publishes the OpenPencil Cloud container image built from
+  upstream mainline release source. The newest non-draft release, including
+  prereleases, is selected; project dependencies and base images are refreshed
+  on the weekly build. See openspec/project.md and cloud/README.md. Upstream
+  OpenPencil behavior and host deployment are external owners.
+
+rules:
+  proposal:
+    - Name affected capabilities, scope, status and required authorization.
+    - Distinguish source-confirmed behavior from memory, proposals and live evidence.
+  specs:
+    - Use observable SHALL or MUST requirements with concrete boundary scenarios.
+    - MODIFIED replaces a whole requirement. Preserve unaffected scenarios.
+    - Add source and verification pointers without duplicating build runbooks.
+    - Keep host configuration, historical incidents and unimplemented ideas out of main specs.
+  design:
+    - Record only consequential decisions, alternatives, risks and rollback.
+    - Do not select speculative tooling or widen host authority without approval.
+  tasks:
+    - Number checkboxes and state how completion is verified in each task.
+    - Keep tests and documentation with their implementation task group.
+    - Separate executed checks from source review and pending operator acceptance.

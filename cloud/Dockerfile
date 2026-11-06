@@ -4,7 +4,7 @@
 # project's lockfile within the ranges declared in package.json before building.
 FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS bun
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.63.0-noble AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.65.0-noble AS build
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
 WORKDIR /src

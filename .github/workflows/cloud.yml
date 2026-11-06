@@ -150,26 +150,13 @@ jobs:
             --fingerprint .build/fingerprint.txt \
             --output .build/published.json
 
-      - name: Request public package visibility
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method PATCH \
-            "/user/packages/container/openpencil-cloud" \
-            -f visibility=public \
-            || echo "::warning::Set the GHCR package visibility to public in GitHub package settings"
-
       - name: Verify anonymous pull
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        continue-on-error: true
         env:
           VERSION: ${{ steps.release.outputs.version }}
         run: |
           docker logout ghcr.io
-          docker pull "$IMAGE:$VERSION" \
-            || echo "::warning::Anonymous pull failed; the package is not public yet"
+          docker pull "$IMAGE:$VERSION"
 
       - name: Upload release evidence
         if: always()

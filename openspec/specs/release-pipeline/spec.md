@@ -50,14 +50,14 @@ Publication SHALL be serialized per ref and SHALL push only the checked candidat
 
 ### Requirement: Package accessibility
 
-The published package SHALL be usable by an unauthenticated pull after the first publication.
+The published package SHALL be pullable without registry authentication.
 
-#### Scenario: First publication
+#### Scenario: Anonymous pull
 
-- **WHEN** a new user-owned GHCR package is published
-- **THEN** the workflow requests public package visibility
-- **AND** it attempts an anonymous pull of the published version
-- **AND** an unavailable visibility change is reported instead of claimed as successful
+- **WHEN** a version is published
+- **THEN** the workflow logs out of GHCR and pulls that exact version anonymously
+- **AND** a private or otherwise inaccessible package fails the run with a visibility instruction
+- **AND** the build does not claim successful publication when the anonymous pull fails
 
 ### Requirement: Evidence retention
 

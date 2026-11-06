@@ -2,9 +2,10 @@
 # OpenPencil Cloud from upstream release source. The workflow builds this file
 # against .build/source, a checkout of the release commit, and refreshes the
 # project's lockfile within the ranges declared in package.json before building.
+# Node stays on the upstream Node 22 LTS baseline; major runtime changes are manual.
 FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS bun
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.63.0-noble AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.65.0-noble AS build
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
 WORKDIR /src

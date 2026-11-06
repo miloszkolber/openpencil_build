@@ -35,9 +35,9 @@ The smoke script starts PostgreSQL, SeaweedFS, a bucket initializer and the cand
 
 ## Publication
 
-The workflow publishes the exact release version and, when applicable, `next` for the newest prerelease or `latest` for the newest stable release. It verifies the published manifest and labels before reporting success.
+The workflow publishes the exact release version and, when applicable, `next` for the newest prerelease or `latest` for the newest stable release. It verifies the published manifest and labels, then pulls the version anonymously before reporting success.
 
-A new user-owned GHCR package starts private even when the repository is public. The workflow requests public visibility after publication. If that request is unavailable, set the package visibility in GitHub package settings before relying on anonymous pulls.
+A new user-owned GHCR package starts private even when the repository is public. The GitHub Packages REST API cannot change container package visibility, so set it once in the package settings if the anonymous pull fails. The workflow fails rather than claiming a successful publication when the package is not publicly pullable.
 
 Version tags can be rebuilt by later scheduled runs. Use the manifest digest for rollback, and treat `io.openpencil-build.inputs` as the build-input identity.
 

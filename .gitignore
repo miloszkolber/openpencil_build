@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 *.tar.gz
 smoke.log
+deploy/.env

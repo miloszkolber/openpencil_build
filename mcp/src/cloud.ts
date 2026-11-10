@@ -8,7 +8,6 @@ import {
   type WorkspaceSummary
 } from '@open-pencil/cloud/contract'
 import {
-  CloudAPIError,
   createCloudAPIClient,
   discoverCloud,
   pollCloudDeviceToken,
@@ -240,8 +239,4 @@ export async function saveCloudDocument(input: {
     images: named
   })
   return committed as CloudDocument
-}
-
-export function isRevisionConflict(error: unknown): boolean {
-  return error instanceof CloudAPIError && error.code === 'revision_conflict'
 }

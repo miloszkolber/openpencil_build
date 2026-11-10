@@ -52,7 +52,8 @@ The bridge SHALL authenticate with the Cloud device flow and access documents th
 
 - **WHEN** a document is saved explicitly or after the quiet period
 - **THEN** the bridge writes a `.fig` revision and its image sidecars
-- **AND** it retries a revision conflict against the latest Cloud revision
+- **AND** it uses the revision downloaded or last saved by this bridge as the base
+- **AND** a revision conflict fails without retrying the stale snapshot against a newer revision
 
 ### Requirement: MCP tool surface
 
@@ -84,4 +85,4 @@ The bridge SHALL keep Cloud and MCP credentials separate and state its stopgap l
 #### Scenario: Documented limits
 
 - **WHEN** an operator reads the bridge README
-- **THEN** it explains the seven-day Cloud session, room restore behavior, image-byte transport and the pinned upstream version
+- **THEN** it explains session expiry, room restore behavior, image-byte transport and the pinned upstream version

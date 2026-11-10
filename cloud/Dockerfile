@@ -18,6 +18,10 @@ RUN for attempt in 1 2 3; do \
       sleep 15; \
     done; \
     exit 1
+# The bundled demo icon client in older upstream releases reads only concrete
+# icons. Newer compatible Lucide data moves names to aliases. Resolve aliases
+# with Iconify's own utility instead of pinning or bypassing the refresh.
+RUN bun -e 'const f="tools/generate/demo/src/document/icons.ts"; const p=Bun.file(f); if (await p.exists()) { const s=await p.text(); const old="const icon = lucide.icons[name]"; if (s.includes(old)) await Bun.write(f, "import { createRequire } from \"node:module\"\nconst { getIconData } = createRequire(import.meta.resolve(\"@open-pencil/core/icons\"))(\"@iconify/utils\")\n" + s.replace(old, "const icon = getIconData(lucide, name)")); }'
 RUN bun --filter @open-pencil/cloud test:unit
 RUN bun run build:packages
 RUN bun run build:cloud

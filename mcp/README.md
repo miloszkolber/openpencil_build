@@ -8,17 +8,17 @@ A long-running MCP server that joins an OpenPencil Cloud document's collaboratio
 - Downloads the document's current `.fig` revision and opens its Yjs room through the Cloud relay.
 - Seeds an empty room from the stored revision; joins an existing room without replacing its document.
 - Uses the MCP tool registry from `@open-pencil/mcp` with a headless graph backend instead of a desktop app.
-- Saves a new Cloud revision after a quiet period (`OPENPENCIL_MCP_SAVE_DEBOUNCE_MS`, default 3 s) or explicitly through `save_document`.
+- Saves a new Cloud revision after a quiet period (`OPENPENCIL_MCP_SAVE_DEBOUNCE_MS`, default 3 s) or explicitly through `save_document`. A conflicting revision fails the save rather than overwriting newer data. Reconcile changes before reopening the document.
 - App-only tools such as selection, undo/redo, settings and tab activation are disabled. Document tools, variables, structure, exports and `eval` (when enabled) work live.
 
 ## Login
 
-Cloud sessions last about seven days. Run the login command and approve the device code in a browser:
+Cloud sessions can expire. Run the login command and approve the device code in a browser:
 
 ```sh
 docker volume create openpencil-mcp-data
 docker run --rm -it -v openpencil-mcp-data:/data \
-  -e OPENPENCIL_CLOUD_URL=https://core.mewa.sh:8789 \
+  -e OPENPENCIL_CLOUD_URL=https://cloud.example.com \
   openpencil-mcp bun src/login.ts
 ```
 
@@ -33,7 +33,7 @@ docker run -d --name openpencil-mcp --restart unless-stopped \
   -p 127.0.0.1:8790:8790 \
   -v openpencil-mcp-data:/data \
   -e OPENPENCIL_MCP_TOKEN=replace-with-a-random-token \
-  -e OPENPENCIL_CLOUD_URL=https://core.mewa.sh:8789 \
+  -e OPENPENCIL_CLOUD_URL=https://cloud.example.com \
   openpencil-mcp
 ```
 
@@ -55,7 +55,7 @@ docker run -d --name openpencil-mcp --restart unless-stopped \
   "url": "http://127.0.0.1:8790/mcp",
   "oauth": false,
   "headers": {
-    "Authorization": "Bearer {file:/etc/opencode-server/openpencil-mcp.token}"
+    "Authorization": "Bearer {file:/path/to/mcp-token}"
   }
 }
 ```
@@ -75,7 +75,7 @@ Use `list_workspaces`, `list_documents`, then `open_document`. Standard tools ac
 ```sh
 cd mcp
 bun install
-OPENPENCIL_CLOUD_URL=https://core.mewa.sh:8789 \
+OPENPENCIL_CLOUD_URL=https://cloud.example.com \
 OPENPENCIL_MCP_TOKEN=local \
 OPENPENCIL_MCP_DATA_DIR=/tmp/openpencil-mcp \
 bun src/login.ts

@@ -29,7 +29,7 @@ export function readConfig(environment = process.env): AdapterConfig {
   return {
     dataDir,
     tokenFile: join(dataDir, 'cloud.json'),
-    cloudURL: environment.OPENPENCIL_CLOUD_URL?.trim() || 'https://core.mewa.sh:8789',
+    cloudURL: environment.OPENPENCIL_CLOUD_URL?.trim() || 'http://127.0.0.1:8789',
     mcpToken: environment.OPENPENCIL_MCP_TOKEN?.trim() || null,
     workspaceId: environment.OPENPENCIL_WORKSPACE_ID?.trim() || null,
     port: integer(environment.PORT, 8790),

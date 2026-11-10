@@ -15,6 +15,8 @@ The image runs the OpenPencil Cloud server with the editor and portal pages it s
 
 The workflow checks the newest non-draft release by semver across stable and prerelease tags once a day. It rebuilds only when that release's version or `latest` tag is not already published. A relevant push or manual dispatch rebuilds on request. `bun update` refreshes direct and transitive dependencies within the ranges declared by the release, so the image is newer than the release's committed lockfile and is not bit-reproducible. Dependabot updates base tags within their current major versions; a major runtime or toolchain change is a reviewed manual change.
 
+For releases whose bundled demo client reads only concrete Lucide icons, the build resolves icon aliases using the Iconify utility already required by core. This keeps the demo compatible with updated icon data without pinning the dependency. Remove the correction when the upstream client handles aliases itself.
+
 ## Contents
 
 The runtime is `gcr.io/distroless/nodejs22-debian12:nonroot`: Node 22 with no shell, package manager or extra OS tools, running as UID/GID 65532. It contains the standalone Cloud server, the built editor and portal site at `/app/site`, and the upstream Cloud license and notice. It serves on port 8787 and keeps `/tmp` available for runtime temporary files.

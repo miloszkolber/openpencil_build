@@ -21,7 +21,6 @@ import {
   type CloudClient,
   type CloudDocument,
   downloadCloudDocument,
-  isRevisionConflict,
   saveCloudDocument
 } from './cloud'
 import { connectCollabRoom } from './connection'
@@ -84,6 +83,7 @@ export class LiveDocument {
   private closing = false
   private destroyed = false
   private changed = false
+  private changeVersion = 0
   private revisionId: string
 
   private constructor(options: LiveDocumentOptions, document: CloudDocument, graph: SceneGraph, revisionId: string) {
@@ -275,9 +275,10 @@ export class LiveDocument {
     this.target(pageId)
     const { result, changed } = await executeTool(this.graph, this.figma, name, args)
     if (changed) {
+      this.changed = true
+      this.changeVersion += 1
       this.emit('history:changed')
       await measureDocumentText(this.graph)
-      this.changed = true
       this.scheduleSave()
     }
     return result
@@ -299,35 +300,19 @@ export class LiveDocument {
       this.saveTimer = null
     }
     const run = this.saveChain.then(async () => {
-      const current = await this.client.getDocument(this.id)
+      const version = this.changeVersion
       const bytes = await writeGraph(this.graph)
-      try {
-        const saved = await saveCloudDocument({
-          client: this.client,
-          documentId: this.id,
-          name: this.name,
-          kind: this.graph.documentKind,
-          baseRevisionId: current.revisionId,
-          bytes
-        })
-        this.revisionId = saved.currentRevisionId
-        this.changed = false
-        return saved
-      } catch (error) {
-        if (!isRevisionConflict(error)) throw error
-        const latest = await this.client.getDocument(this.id)
-        const saved = await saveCloudDocument({
-          client: this.client,
-          documentId: this.id,
-          name: this.name,
-          kind: this.graph.documentKind,
-          baseRevisionId: latest.revisionId,
-          bytes
-        })
-        this.revisionId = saved.currentRevisionId
-        this.changed = false
-        return saved
-      }
+      const saved = await saveCloudDocument({
+        client: this.client,
+        documentId: this.id,
+        name: this.name,
+        kind: this.graph.documentKind,
+        baseRevisionId: this.revisionId,
+        bytes
+      })
+      this.revisionId = saved.currentRevisionId
+      if (this.changeVersion === version) this.changed = false
+      return saved
     })
     this.saveChain = run.catch(() => undefined)
     return run
@@ -340,7 +325,14 @@ export class LiveDocument {
   async close(save = true): Promise<void> {
     if (this.destroyed || this.closing) return
     this.closing = true
-    if (save) await this.save(false).catch(() => undefined)
+    if (save) {
+      try {
+        await this.save(false)
+      } catch (error) {
+        this.closing = false
+        throw error
+      }
+    }
     if (this.saveTimer) clearTimeout(this.saveTimer)
     this.unbindGraphEvents?.()
     this.variableSync?.dispose()

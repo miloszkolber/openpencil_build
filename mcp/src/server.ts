@@ -24,8 +24,10 @@ const client = cloudClient(token)
 const manager = new DocumentManager(config, client)
 
 setInterval(() => {
-  void client.getSession().catch((error: unknown) => {
-    console.error('[openpencil-mcp] Cloud session check failed; run the login command again:', error)
+  void client.getSession().then((session) => {
+    if (!session) console.error('[openpencil-mcp] Cloud session expired; run the login command again')
+  }).catch(() => {
+    console.error('[openpencil-mcp] Cloud session check failed; check connectivity and authentication')
   })
 }, 6 * 60 * 60_000).unref()
 

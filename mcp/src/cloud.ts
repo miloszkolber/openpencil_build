@@ -41,14 +41,20 @@ export type CloudDocumentBytes = {
   revisionId: string
 }
 
-export function cloudClient(token: CloudToken): CloudClient {
+export function cloudClient(token: CloudToken, accessToken: () => string = () => token.accessToken): CloudClient {
   const base = new URL(token.serverURL)
   if (!base.pathname.replace(/\/$/, '').endsWith('/api')) {
     base.pathname = `${base.pathname.replace(/\/$/, '')}/api`
   }
   base.search = ''
   base.hash = ''
-  return createCloudAPIClient(base.href, { accessToken: token.accessToken })
+  return createCloudAPIClient(base.href, {
+    fetch: (input, init) => {
+      const request = new Request(input, init)
+      request.headers.set('Authorization', `Bearer ${accessToken()}`)
+      return fetch(request)
+    }
+  })
 }
 
 export async function loginCloud(serverURL: string): Promise<CloudToken> {

@@ -47,6 +47,7 @@ jobs:
         run: |
           docker run --rm "$IMAGE:local" bun test src/live.test.ts
           docker run --rm "$IMAGE:local" bun test src/cloud.test.ts
+          docker run --rm "$IMAGE:local" bun test src/auth.test.ts
           mkdir -p "$RUNNER_TEMP/mcp-data"
           printf '%s\n' \
             '{"serverURL":"http://127.0.0.1:9","accessToken":"smoke","savedAt":"2026-01-01T00:00:00.000Z"}' \

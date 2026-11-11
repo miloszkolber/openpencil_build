@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { saveCloudDocument } from './cloud'
+import { cloudClient, saveCloudDocument } from './cloud'
 
 test('save sends the original base revision and propagates a Cloud conflict', async () => {
   const conflict = new Error('revision conflict')
@@ -44,5 +44,26 @@ test('a conflict at commit is propagated without retrying the uploaded snapshot'
     expect(commits).toBe(1)
   } finally {
     globalThis.fetch = previousFetch
+  }
+})
+
+test('existing Cloud client uses the replacement token on later requests', async () => {
+  const headers: string[] = []
+  const server = Bun.serve({
+    port: 0,
+    fetch(request) {
+      headers.push(request.headers.get('authorization') ?? '')
+      return Response.json({ user: { userId: 'bot', email: 'bot@example.com', name: 'Bot' } })
+    }
+  })
+  try {
+    let token = 'old'
+    const client = cloudClient({ serverURL: `http://127.0.0.1:${server.port}`, accessToken: token, savedAt: '' }, () => token)
+    await client.getSession()
+    token = 'new'
+    await client.getSession()
+    expect(headers).toEqual(['Bearer old', 'Bearer new'])
+  } finally {
+    server.stop(true)
   }
 })

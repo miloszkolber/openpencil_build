@@ -8,7 +8,7 @@ import * as v from 'valibot'
 
 import { fail, ok, registerTools } from '@open-pencil/mcp'
 
-import { cloudClient } from './cloud'
+import { managedCloudSession } from './auth'
 import { readCloudToken, readConfig } from './config'
 import { DocumentManager } from './manager'
 
@@ -20,16 +20,17 @@ if (!token) {
     `No Cloud token at ${config.tokenFile}. Run the login command first (bun src/login.ts).`
   )
 }
-const client = cloudClient(token)
+const auth = managedCloudSession(token, config.dataDir)
+const client = auth.client
 const manager = new DocumentManager(config, client)
 
-setInterval(() => {
-  void client.getSession().then((session) => {
-    if (!session) console.error('[openpencil-mcp] Cloud session expired; run the login command again')
-  }).catch(() => {
-    console.error('[openpencil-mcp] Cloud session check failed; check connectivity and authentication')
+function checkCloudSession() {
+  void auth.check().catch(() => {
+    console.error('[openpencil-mcp] Cloud session check or reauthentication failed; check connectivity and credentials')
   })
-}, 6 * 60 * 60_000).unref()
+}
+checkCloudSession()
+setInterval(checkCloudSession, 5 * 60_000).unref()
 
 const disabledTools = [
   'get_selection',
@@ -215,6 +216,11 @@ setInterval(() => {
 }, 60_000).unref()
 
 const app = new Hono()
+
+app.get('/ready', (context) => {
+  const cloudAuth = auth.status()
+  return context.json({ status: cloudAuth === 'ready' ? 'ready' : 'unavailable', cloudAuth }, cloudAuth === 'ready' ? 200 : 503)
+})
 
 app.get('/health', (context) =>
   context.json({

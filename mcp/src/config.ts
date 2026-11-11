@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
 import { dirname, join } from 'node:path'
 
 export type CloudToken = {
@@ -59,5 +60,11 @@ export async function readCloudToken(tokenFile: string): Promise<CloudToken | nu
 
 export async function writeCloudToken(tokenFile: string, token: CloudToken): Promise<void> {
   await mkdir(dirname(tokenFile), { recursive: true, mode: 0o700 })
-  await writeFile(tokenFile, `${JSON.stringify(token, null, 2)}\n`, { mode: 0o600 })
+  const temporary = `${tokenFile}.${randomUUID()}.tmp`
+  try {
+    await writeFile(temporary, `${JSON.stringify(token, null, 2)}\n`, { mode: 0o600, flag: 'wx' })
+    await rename(temporary, tokenFile)
+  } finally {
+    await unlink(temporary).catch(() => undefined)
+  }
 }

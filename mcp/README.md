@@ -26,7 +26,7 @@ The token is written to `/data/cloud.json` with mode `0600`. If tools start fail
 
 For optional unattended reauthentication, provision a dedicated workspace editor and place a JSON object with `email` and `password` in `/data/credentials.json`, readable only by the bridge user (mode `0600`). The bridge checks the Cloud session on startup and every five minutes. When the session is invalid, it signs in, checks the resulting identity, and atomically replaces the stored token. It never retries a document mutation. Sign-in requiring an additional factor cannot complete unattended and is reported as an error. Store this credential separately from the MCP bearer token and never commit it.
 
-`/health` is a process liveness check. `/ready` returns 503 while Cloud authentication is unchecked or its latest check failed, and 200 when the latest check succeeded. A network failure does not cause credential-based sign-in or overwrite the saved token.
+`/health` is a process liveness check. `/ready` returns 503 while Cloud authentication is unchecked or its latest check failed, and 200 when the latest check succeeded. The container health check uses `/ready`. A network failure does not cause credential-based sign-in or overwrite the saved token.
 
 ## Run
 

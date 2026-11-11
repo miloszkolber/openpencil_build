@@ -11,5 +11,5 @@ ENV NODE_ENV=production \
 USER bun
 EXPOSE 8790
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
-  CMD ["bun", "-e", "fetch('http://127.0.0.1:8790/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+  CMD ["bun", "-e", "fetch('http://127.0.0.1:8790/ready').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
 CMD ["bun", "src/server.ts"]

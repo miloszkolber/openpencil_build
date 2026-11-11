@@ -1,5 +1,9 @@
 # Change history
 
+## 2026-11-11
+
+Added optional service-account reauthentication for the Cloud MCP bridge, atomic token replacement, dynamic use of refreshed credentials and an authentication readiness check. Verified revocation recovery in an open disposable room and after deployment. See [the archived change](changes/archive/2026-11-11-mcp-reauth/evidence.md).
+
 ## 2026-11-06
 
 Initial OpenPencil build from upstream mainline release source, with dependency refresh, unit tests, smoke verification and GHCR publication.

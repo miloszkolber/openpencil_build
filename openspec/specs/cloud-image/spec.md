@@ -100,3 +100,14 @@ The image SHALL contain only the built Cloud server, its site assets and upstrea
 - **AND** it contains the standalone server, the built site, the Cloud LICENSE and the Cloud NOTICE
 - **AND** it contains no shell, package manager or extra OS tools
 - **AND** `/tmp` remains writable for runtime temporary files
+
+### Requirement: Release-defined WebAssembly build
+
+The Cloud image build SHALL compile required WebAssembly from the resolved release source using its declared Rust toolchain.
+
+#### Scenario: Release requires the HTML engine
+
+- **WHEN** the release contains the HTML engine's Rust toolchain and source
+- **THEN** the build provides Cargo and the declared WebAssembly target to the package build
+- **AND** the generated module is available to the upstream package and Cloud builds
+- **AND** the final runtime does not include the Rust toolchain

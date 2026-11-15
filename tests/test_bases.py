@@ -32,6 +32,16 @@ class ParseTests(unittest.TestCase):
     def test_ignores_scratch(self):
         self.assertEqual(bases.parse_from_lines("FROM scratch\n"), [])
 
+    def test_builder_toolchain_is_resolved_with_other_bases(self):
+        dockerfile = (ROOT / "cloud" / "Dockerfile").read_text()
+        images = bases.parse_from_lines(dockerfile)
+        self.assertIn("rust:1-bookworm", images)
+        digest = "sha256:" + "a" * 64
+        self.assertIn(
+            f"FROM --platform=$BUILDPLATFORM rust:1-bookworm@{digest} AS rust",
+            bases.rewrite(dockerfile, {"rust:1-bookworm": digest}),
+        )
+
 
 class RewriteTests(unittest.TestCase):
     def test_preserves_platform_and_stage(self):

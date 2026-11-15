@@ -6,11 +6,24 @@
 # The runtime is distroless: no shell, package manager or extra OS tools.
 FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS bun
 
+# Rustup honors the source release's rust-toolchain.toml, including its target.
+# The base tag is resolved to a linux/amd64 digest alongside the other bases.
+FROM --platform=$BUILDPLATFORM rust:1-bookworm AS rust
+
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.65.0-noble AS build
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=rust /usr/local/cargo /usr/local/cargo
+COPY --from=rust /usr/local/rustup /usr/local/rustup
+ENV CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup \
+    PATH=/usr/local/cargo/bin:$PATH
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
 WORKDIR /src
 COPY . .
+RUN if [ -f rust-toolchain.toml ]; then cargo --version; fi
 RUN bun install --frozen-lockfile
 RUN for attempt in 1 2 3; do \
       if bun update; then exit 0; fi; \

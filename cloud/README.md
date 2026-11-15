@@ -17,6 +17,8 @@ The workflow checks the newest non-draft release by semver across stable and pre
 
 For releases whose bundled demo client reads only concrete Lucide icons, the build resolves icon aliases using the Iconify utility already required by core. This keeps the demo compatible with updated icon data without pinning the dependency. Remove the correction when the upstream client handles aliases itself.
 
+The builder includes Rustup, Cargo and a native compiler for releases that build the HTML engine WebAssembly module. Rustup uses the resolved source release's `rust-toolchain.toml`, including its declared WebAssembly target. These tools are build-only and are not copied to the final runtime.
+
 ## Contents
 
 The runtime is `gcr.io/distroless/nodejs22-debian12:nonroot`: Node 22 with no shell, package manager or extra OS tools, running as UID/GID 65532. It contains the standalone Cloud server, the built editor and portal site at `/app/site`, and the upstream Cloud license and notice. It serves on port 8787 and keeps `/tmp` available for runtime temporary files.

@@ -2,7 +2,7 @@
 
 ## 2026-11-16
 
-Moved the Cloud MCP bridge from OpenPencil `0.17.0-beta.2` to `0.17.0-beta.5`, including its vendored collaboration source, and repaired the two beta.5 breaks: the removed `initCanvasKit` export and the registry's renamed file tools. Verified against a disposable beta.5 Cloud stack. See [the change](changes/mcp-beta5/evidence.md).
+Moved the Cloud MCP bridge from OpenPencil `0.17.0-beta.2` to `0.17.0-beta.5`, including its vendored collaboration source, and repaired the two beta.5 breaks: the removed `initCanvasKit` export and the registry's renamed file tools. Verified against a disposable beta.5 Cloud stack. See [the archived change](changes/archive/2026-11-16-mcp-beta5/evidence.md).
 
 ## 2026-11-15
 

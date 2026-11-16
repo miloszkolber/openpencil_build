@@ -12,6 +12,7 @@
 
 - `scripts/publish_mcp.py`, `tests/test_publish_mcp.py` and the workflow are in the push and pull-request path filters.
 - The workflow checks out full history, publishes through the script, and pulls the commit tag plus the aliases when they moved.
+- The built image now states `org.opencontainers.image.version=0.1.0` and `org.opencontainers.image.licenses=MIT` instead of inheriting the Bun base image's version label.
 - `rhysd/actionlint:1.7.12` reported no findings for the edited workflow.
 
 ## Repository checks

@@ -23,7 +23,7 @@ services:
       - ./openpencil.toml:/etc/openpencil/openpencil.toml:ro
 
   seaweedfs:
-    image: chrislusf/seaweedfs:4.41
+    image: chrislusf/seaweedfs:4.53
     restart: unless-stopped
     network_mode: service:openpencil
     depends_on:
@@ -44,7 +44,7 @@ services:
       retries: 30
 
   bucket:
-    image: amazon/aws-cli:2.27.49
+    image: amazon/aws-cli:2.40.3
     network_mode: service:openpencil
     depends_on:
       seaweedfs:
@@ -76,7 +76,7 @@ services:
       retries: 30
 
   mailpit:
-    image: axllent/mailpit:v1.31.0
+    image: axllent/mailpit:v1.33.1
     restart: unless-stopped
     environment:
       MP_DISABLE_VERSION_CHECK: 'true'

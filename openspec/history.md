@@ -2,6 +2,10 @@
 
 ## 2026-11-16
 
+Kept the MCP image aliases moving forward: the workflow now publishes an immutable commit tag and moves `latest` and `0.1.0` only for an equal or descendant commit. See [the archived change](changes/archive/2026-11-16-mcp-image-tags/evidence.md).
+
+Refreshed the deployment and smoke stack images to SeaweedFS 4.53, aws-cli 2.40.3 and Mailpit 1.33.1, and added Compose Dependabot updates for both directories. See [the archived change](changes/archive/2026-11-16-stack-images/evidence.md).
+
 Moved the Cloud MCP bridge from OpenPencil `0.17.0-beta.2` to `0.17.0-beta.5`, including its vendored collaboration source, and repaired the two beta.5 breaks: the removed `initCanvasKit` export and the registry's renamed file tools. Verified against a disposable beta.5 Cloud stack. See [the archived change](changes/archive/2026-11-16-mcp-beta5/evidence.md).
 
 ## 2026-11-15

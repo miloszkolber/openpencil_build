@@ -10,7 +10,7 @@ FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS bun
 # The base tag is resolved to a linux/amd64 digest alongside the other bases.
 FROM --platform=$BUILDPLATFORM rust:1-bookworm AS rust
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.65.0-noble AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/playwright:v1.65.1-noble AS build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*

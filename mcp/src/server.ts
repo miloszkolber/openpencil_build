@@ -39,10 +39,10 @@ const disabledTools = [
   'redo',
   'get_settings',
   'update_settings',
-  'new_document',
-  'open_file',
-  'list_recent_files',
-  'save_file'
+  'create_document',
+  'open_document',
+  'list_recent_documents',
+  'save_document'
 ]
 
 function authorized(header: string | undefined, alternate: string | undefined): boolean {
@@ -67,7 +67,7 @@ async function sendRPC(body: Record<string, unknown>): Promise<unknown> {
     const target = manager.setActive(documentId)
     return { ok: true, result: { activated: true }, target }
   }
-  if (command === 'close_file') {
+  if (command === 'close_document') {
     const documentId = typeof args.document_id === 'string' ? args.document_id : undefined
     const document = manager.document(documentId)
     await manager.close(document.id, args.unsaved !== 'discard')

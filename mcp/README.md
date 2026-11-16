@@ -72,7 +72,7 @@ Use `list_workspaces`, `list_documents`, then `open_document`. Standard tools ac
 - It writes image bytes through the Yjs room rather than Cloud image references; large image-heavy documents can grow the room. The stored revision still splits images normally.
 - A document restore moves the room to a new epoch. The adapter closes that room; open the document again.
 - `open_document` downloads the current revision before joining, so opening a large document takes as long as that download and headless load.
-- The adapter is pinned to OpenPencil `0.17.0-beta.2`; update its package versions and vendored collaboration source when Cloud moves to another release.
+- The adapter is pinned to OpenPencil `0.17.0-beta.5`; update its package versions and vendored collaboration source when Cloud moves to another release.
 
 ## Development
 

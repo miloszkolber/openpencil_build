@@ -2,13 +2,13 @@ import type { SceneGraph } from '@open-pencil/scene-graph'
 import { collectSceneMutation } from '@open-pencil/scene-graph/mutation-impact'
 
 import { FigmaAPI } from '@open-pencil/core/figma-api'
+import { getCanvasKit } from '@open-pencil/core/canvaskit'
 import { BUILTIN_IO_FORMATS, IORegistry } from '@open-pencil/core/io'
 import { populateAllFigPages } from '@open-pencil/core/io/formats/fig'
 import {
   createCanvasKitRasterCodec,
   headlessRenderNodes,
-  headlessRenderer,
-  initCanvasKit
+  headlessRenderer
 } from '@open-pencil/core/io/formats/raster'
 import { computeAllLayouts, installTextMeasurer, sizeAutoResizingText } from '@open-pencil/core/layout'
 import { prepareGraphFonts } from '@open-pencil/core/text'
@@ -67,7 +67,7 @@ export async function createFigma(graph: SceneGraph): Promise<FigmaAPI> {
   figma.setRenderer(renderer)
   figma.exportImage = (nodeIds, options) =>
     headlessRenderNodes(graph, options.pageId ?? figma.currentPageId, nodeIds, options)
-  figma.rasterCodec = createCanvasKitRasterCodec(await initCanvasKit())
+  figma.rasterCodec = createCanvasKitRasterCodec(await getCanvasKit())
   return figma
 }
 

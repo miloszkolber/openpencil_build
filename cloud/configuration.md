@@ -63,7 +63,6 @@ The TOML file uses `schema_version = 2`. Tables are strict: an unknown key stops
 | `[entitlements.storage]` | `maximum_bytes`. |
 | `[entitlements.sharing]` | `links`, `guest_view`, `guest_edit`, `guest_presence`. |
 | `[entitlements.collaboration]` | `enabled`, `maximum_participants`. |
-| `[entitlements.ai]` | `enabled`, optional `monthly_credit_allowance`. |
 | `[entitlements.services]` | `enabled`, optional `monthly_credit_allowance` passed to the services server. |
 | `[services]` | Optional `endpoint` and `token_lifetime_minutes`; the service receives short-lived signed tokens. Cloud never proxies models. |
 | `[billing]` | Optional `endpoint` linked from the account and plan pages. |

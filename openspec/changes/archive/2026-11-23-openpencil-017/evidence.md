@@ -21,8 +21,9 @@
 - The candidate built from the resolved release archive. Rustup installed the release's `1.98.1` toolchain and `wasm32-unknown-unknown`, and `build:packages` built the new `@open-pencil/canvaskit`, `@open-pencil/std`, `@open-pencil/html-engine` and `@open-pencil/theme` packages.
 - Cloud unit tests inside the build: 329 passed, 0 failed, 1651 expectations.
 - `cloud/smoke.sh` passed for the local candidate: PostgreSQL, SeaweedFS, the bucket initializer and the server reported `/ready` and `/health`, and `/welcome` served HTML.
-- Image inspection: distroless `nonroot`, UID/GID 65532, `/app/site` present, `server.mjs` and `services.mjs` present, no shell or package manager, image size 67.7 MB.
-- Not yet executed: publication and anonymous pull, which follow the commit and workflow run.
+- Image inspection of the published `0.17.0`: distroless `nonroot`, UID/GID 65532, `/app/site` present, `server.mjs` and `services.mjs` present, no shell or package manager, image size 69.2 MB. Labels carry version `0.17.0`, upstream tag `v0.17.0`, commit `8524f1aa181aa7b28d8e5a3f5b3637b009af2d5f`, release id `454432918`, source revision `8f2cb0098dc24f47354f923d2a54c2879d275251` and fingerprint `ea00668b2c44c972544c80dcaf18eb8e4c0d64c80196dde0798270fdb4bf10cd`.
+- The dispatch run published `0.17.0` and moved `latest` to manifest `sha256:787c2667cdcaed32468b95c1ff9fe5d3d7dc412051a63f330ceffd3675f4bc26`, then pulled it anonymously. The workflow run is `45118520420`.
+- The bridge workflow published `sha-cef3ab61847a`, `0.1.0` and `latest` as manifest `sha256:c427824f66cc6bf1af4792ae9a389026f125ad31163b1ebf1c9e27a8334f0aef`, revision `cef3ab61847aca81b69a7f21d80d93a138ebf665`, and pulled all three anonymously. The workflow run is `45117589636`.
 
 ## MCP bridge
 

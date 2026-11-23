@@ -46,9 +46,16 @@ A disposable Compose project ran the local 0.17.0 candidate with PostgreSQL 17, 
 - Observed limit: the Cloud room snapshot is authoritative while it exists. An external revision written without joining the room is not merged into an open room; after a restart the bridge downloaded that revision as its base but applied the room state, and its later save produced a new revision from the room content. The save used the current revision as its base and did not overwrite a newer revision with a stale one.
 - No credential was printed. The disposable project, volumes and data directories were removed after the checks.
 
+## Upstream advisories
+
+- `GHSA-6r2v-cq7x-fvh6` (medium, `@open-pencil/mcp` below `0.17.0-beta.6`) covers the desktop MCP server's `/rpc` and `/files` routes and its socket registration. The bridge exposes only `/mcp`, `/health` and `/ready` with one bearer token, so those routes do not exist here; the pinned `0.17.0` package also carries the client-token fix.
+- `GHSA-x4rx-8c38-9hw8` (high, `@open-pencil/dom-css` below `0.17.0-beta.6`) is fixed by the release's scriptless HTML measuring frame. The Cloud image and the bridge packages resolve `0.17.0`.
+- `GHSA-g2vj-wpg5-vqvh` (critical, `open-pencil` below `0.15.0`) covers the old public Trystero rooms. Cloud collaboration uses authenticated relay tickets, and the reviewed versions are above the patched range.
+
 ## Pipeline and documentation
 
 - The MCP workflow resolves `oven/bun:1.4.4` to its linux/amd64 digest and builds the rewritten Dockerfile; a local run of `scripts/bases.py` and the rebuilt image succeeded.
 - `dependabot.yml` now carries a weekly Docker entry for `mcp/` with a Bun-major ignore, matching the Cloud base policy.
+- Dependabot's refreshed Compose groups proposed `postgres:19-alpine`, a major change the maintenance state keeps manual. Both Compose entries now ignore major PostgreSQL updates; the grouped pull requests that carried it were closed.
 - `cloud/configuration.md` now documents `services.mjs`, `OPENPENCIL_SERVICES_CONFIG`, `OPENPENCIL_SERVICES_UPSTREAM_KEY`, `OPENPENCIL_CLOUD_SERVICES_SIGNING_KEY`, `GITHUB_CLIENT_SECRET`, `[services]`, `[entitlements.services]`, `[billing] endpoint` and the 0.17.0 document settings.
 - Deferred: a browser-editor acceptance pass, natural session expiry, simultaneous seeding by several peers, and a full review of all 111 tool behaviors on 0.17.0.

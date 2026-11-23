@@ -15,6 +15,7 @@ The affected capabilities are OpenPencil image, release pipeline, deployment and
 - Build and publish the OpenPencil `0.17.0` image from upstream commit `8524f1aa181aa7b28d8e5a3f5b3637b009af2d5f`.
 - Pin the MCP bridge to the `0.17.0` packages, replace the vendored `@open-pencil/collab` source with that release's source, and add its new `@open-pencil/std` dependency.
 - Resolve the bridge's `oven/bun` base to a linux/amd64 digest in the MCP workflow and let Dependabot propose base-tag updates for `mcp/`.
+- Keep PostgreSQL on its current major in both Compose groups; Dependabot proposed `19-alpine` and now ignores major PostgreSQL updates for those directories.
 - Correct the configuration reference for the 0.17.0 services server and TOML sections, and update the deployment spec's reference scenario.
 - Record the reviewed upstream releases, published identity and remaining advisories in the maintenance state.
 

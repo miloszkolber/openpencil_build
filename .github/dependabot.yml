@@ -30,6 +30,9 @@ updates:
     groups:
       stack:
         patterns: ['*']
+    ignore:
+      - dependency-name: postgres
+        update-types: ['version-update:semver-major']
   - package-ecosystem: docker-compose
     directory: /cloud
     schedule:
@@ -37,6 +40,9 @@ updates:
     groups:
       smoke:
         patterns: ['*']
+    ignore:
+      - dependency-name: postgres
+        update-types: ['version-update:semver-major']
   - package-ecosystem: docker
     directory: /mcp
     schedule:

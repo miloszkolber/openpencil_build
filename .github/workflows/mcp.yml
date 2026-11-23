@@ -5,13 +5,17 @@ on:
     branches: [main]
     paths:
       - 'mcp/**'
+      - 'scripts/bases.py'
       - 'scripts/publish_mcp.py'
+      - 'tests/test_bases.py'
       - 'tests/test_publish_mcp.py'
       - '.github/workflows/mcp.yml'
   pull_request:
     paths:
       - 'mcp/**'
+      - 'scripts/bases.py'
       - 'scripts/publish_mcp.py'
+      - 'tests/test_bases.py'
       - 'tests/test_publish_mcp.py'
       - '.github/workflows/mcp.yml'
   workflow_dispatch:
@@ -40,9 +44,17 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Resolve and pin base images
+        run: |
+          python3 scripts/bases.py \
+            --dockerfile mcp/Dockerfile \
+            --output .build/mcp-bases.json \
+            --rewrite .build/mcp/Dockerfile
+
       - name: Build candidate
         run: |
           docker build --pull \
+            --file .build/mcp/Dockerfile \
             --tag "$IMAGE:local" \
             --label "org.opencontainers.image.title=OpenPencil MCP bridge" \
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \

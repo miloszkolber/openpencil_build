@@ -27,8 +27,9 @@ Every secret can be supplied through the environment variable named in the TOML.
 | `OPENPENCIL_CLOUD_SMTP_USER`, `OPENPENCIL_CLOUD_SMTP_PASSWORD` | Optional SMTP authentication. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `[authentication.providers.google]`. |
 | `APPLE_PRIVATE_KEY` | `[authentication.providers.apple]`; the other Apple identifiers are plain TOML values. |
+| `GITHUB_CLIENT_SECRET` | `[authentication.providers.github]`; the GitHub App client ID is a plain TOML value. |
 | `TURNSTILE_SECRET_KEY` | `[authentication.captcha]` with the Cloudflare Turnstile provider. |
-| `OPENPENCIL_CLOUD_AI_SIGNING_KEY` | `[ai]`; PKCS #8 PEM P-256 key used to sign AI tokens. |
+| `OPENPENCIL_CLOUD_SERVICES_SIGNING_KEY` | `[services]`; PKCS #8 PEM P-256 key used to sign AI service tokens. |
 | `OPENPENCIL_CLOUD_SERVICE_TOKEN` | `[internal_api]`; bearer token for the internal entitlement API. |
 | `POSTHOG_PROJECT_API_KEY` | `[error_tracking]` unless the TOML names a different variable. |
 
@@ -50,9 +51,10 @@ The TOML file uses `schema_version = 2`. Tables are strict: an unknown key stops
 | `[authentication.trusted_proxies]` | Trusted client-IP headers and proxy addresses, for example `cf-connecting-ip` behind Cloudflare. |
 | `[authentication.providers.google]` | Google client ID and secret reference. |
 | `[authentication.providers.apple]` | Apple client, team and key identifiers plus private-key reference. |
-| `[object_storage]` | `endpoint`, `region`, `bucket`, credential references, `force_path_style`, `checksum_verification` (`metadata` for SeaweedFS/Garage), optional server-side encryption and `maximum_upload_bytes`. |
+| `[authentication.providers.github]` | GitHub App client ID and secret reference. GitHub sign-in needs `deployment.minimum_editor_version` set to an editor release that supports it. |
+| `[object_storage]` | `endpoint`, `region`, `bucket`, credential references, `force_path_style`, `checksum_verification` (`metadata` for SeaweedFS/Garage), optional server-side encryption, `maximum_upload_bytes` and `deleted_prefix` for cleanup. |
 | `[collaboration]` | Optional `relay_url`, maximum message bytes and connections per room. |
-| `[documents]` | `retention_days` for deleted-document recovery. |
+| `[documents]` | `retention_days` for deleted-document recovery and `purge_grace_days` kept after permanent deletion. |
 | `[email]` | `transport = "none"`, `"smtp"` or `"cloudflare"`; `from`; SMTP host, port, `secure` and credential references. |
 | `[workers.email]` | Outbox batch size, interval, lease and maximum attempts. |
 | `[workers.cleanup]` | Cleanup `enabled`, batch size, interval and lease. Set `enabled = false` when an external scheduler runs the cleanup command. |
@@ -62,10 +64,13 @@ The TOML file uses `schema_version = 2`. Tables are strict: an unknown key stops
 | `[entitlements.sharing]` | `links`, `guest_view`, `guest_edit`, `guest_presence`. |
 | `[entitlements.collaboration]` | `enabled`, `maximum_participants`. |
 | `[entitlements.ai]` | `enabled`, optional `monthly_credit_allowance`. |
-| `[ai]` | Optional `endpoint`, signing-key reference and token lifetime; the service receives short-lived signed tokens. Cloud never proxies models. |
-| `[billing]` | Optional `portal_url` linked from the account and plan pages. |
+| `[entitlements.services]` | `enabled`, optional `monthly_credit_allowance` passed to the services server. |
+| `[services]` | Optional `endpoint` and `token_lifetime_minutes`; the service receives short-lived signed tokens. Cloud never proxies models. |
+| `[billing]` | Optional `endpoint` linked from the account and plan pages. |
 | `[internal_api]` | Optional service-token reference for services such as billing that set workspace entitlements. Cannot be combined with static entitlements. |
-| `[error_tracking]` | Optional PostHog error reporting: `provider = "posthog"`, `host`, project-key reference. |
+| `[legal]` | Optional terms and privacy links, `terms_version`, `require_acceptance`, `abuse_email` and `minimum_age`. |
+| `[community]` | Optional read-only workspace exposed as a public gallery, with an optional `tour` document. |
+| `[error_tracking]` | Optional PostHog error reporting: `provider = "posthog"`, `host`, project-key reference and `include_ids`. |
 
 ## Useful profiles
 
@@ -73,20 +78,20 @@ Local try-out: `local_editor = true`, enrollment `open`, email-password enabled 
 
 Private team server: `local_editor = false`, enrollment `approval` or `closed`, guest sharing disabled under `[entitlements.sharing]`, stable HTTPS `public_url`, passkeys enabled, and a reverse proxy that forwards WebSocket upgrades for `/api/collaboration/relay`.
 
-Public service: `mode = "official"` adds the upstream constraints: email-password sign-up requires compromised-password checks and CAPTCHA, SMTP must use a secure connection, and the AI endpoint must use HTTPS. Review the upstream self-hosting and security guidance before exposing a server publicly.
+Public service: `mode = "official"` adds the upstream constraints: email-password sign-up requires compromised-password checks and CAPTCHA, SMTP must use a secure connection, and the services endpoint must use HTTPS. Review the upstream self-hosting and security guidance before exposing a server publicly.
 
-## AI relay
+## AI services server
 
-The image also contains `ai-relay.mjs`, a minimal OpenAI-compatible relay. It uses its own TOML file:
+The image also contains `services.mjs`, the reference OpenPencil services server. It forwards chat completions to one OpenAI-compatible upstream and holds each account to its monthly credit allowance. It uses its own TOML file:
 
 | Variable | Purpose |
 | --- | --- |
-| `OPENPENCIL_AI_RELAY_CONFIG` | Path to the relay TOML file. |
-| `OPENPENCIL_AI_RELAY_UPSTREAM_KEY` | Upstream provider API key. |
-| `DATABASE_URL` | Shared Cloud database or a separate database for the relay. |
-| `PORT` | Relay listen port, default `8788`. |
+| `OPENPENCIL_SERVICES_CONFIG` | Path to the services TOML file. |
+| `OPENPENCIL_SERVICES_UPSTREAM_KEY` | Upstream provider API key. |
+| `DATABASE_URL` | Shared Cloud database or a separate database for the services server. |
+| `PORT` | Services listen port, default `8788`. |
 
-Run it with `docker run … ghcr.io/miloszkolber/openpencil ai-relay.mjs` (the distroless entrypoint is Node). The relay's model catalog, prices and concurrency limits live in its TOML file; see the upstream `openpencil-ai-relay.example.toml`.
+Run it with `docker run … ghcr.io/miloszkolber/openpencil services.mjs` (the distroless entrypoint is Node). Its TOML sets `relay.cloud_url` to Cloud's `public_url`, the allowed browser origins, concurrency and request limits, the upstream base URL, and the model catalog with credit prices. Cloud advertises it through `[services] endpoint`, enables `[entitlements.services]`, and signs tokens with the same `OPENPENCIL_CLOUD_SERVICES_SIGNING_KEY`; the services server reads Cloud's public keys from `/.well-known/jwks.json`. `GET /health` answers without a token. See the upstream `openpencil-services.example.toml` for the file format.
 
 ## Image and distroless notes
 

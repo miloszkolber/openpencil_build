@@ -37,3 +37,13 @@ updates:
     groups:
       smoke:
         patterns: ['*']
+  - package-ecosystem: docker
+    directory: /mcp
+    schedule:
+      interval: weekly
+    groups:
+      base:
+        patterns: ['*']
+    ignore:
+      - dependency-name: oven/bun
+        update-types: ['version-update:semver-major']

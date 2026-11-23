@@ -23,7 +23,7 @@ services:
       - ./openpencil.toml:/etc/openpencil/openpencil.toml:ro
 
   seaweedfs:
-    image: chrislusf/seaweedfs:4.53
+    image: chrislusf/seaweedfs:4.54
     restart: unless-stopped
     network_mode: service:openpencil
     depends_on:
@@ -44,7 +44,7 @@ services:
       retries: 30
 
   bucket:
-    image: amazon/aws-cli:2.40.3
+    image: amazon/aws-cli:2.41.2
     network_mode: service:openpencil
     depends_on:
       seaweedfs:
@@ -60,7 +60,7 @@ services:
         || aws --endpoint-url http://127.0.0.1:8333 s3api create-bucket --bucket openpencil
 
   postgres:
-    image: postgres:17-alpine
+    image: postgres:19-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: openpencil
@@ -76,7 +76,7 @@ services:
       retries: 30
 
   mailpit:
-    image: axllent/mailpit:v1.33.1
+    image: axllent/mailpit:v1.34.0
     restart: unless-stopped
     environment:
       MP_DISABLE_VERSION_CHECK: 'true'

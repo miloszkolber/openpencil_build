@@ -4,7 +4,7 @@
 # project's lockfile within the ranges declared in package.json before building.
 # Node stays on the upstream Node 22 LTS baseline; major runtime changes are manual.
 # The runtime is distroless: no shell, package manager or extra OS tools.
-FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS bun
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.5 AS bun
 
 # Rustup honors the source release's rust-toolchain.toml, including its target.
 # The base tag is resolved to a linux/amd64 digest alongside the other bases.
